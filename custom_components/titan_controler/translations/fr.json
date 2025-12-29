@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "Configuration Titan Expert",
-        "description": "Paramétrez le lien entre votre Shelly et votre batterie Titan.",
+        "description": "Paramétrez le lien entre votre Smart Meter et votre batterie Titan.",
         "data": {
-          "shelly_entity": "Capteur de puissance (Shelly)",
+          "shelly_entity": "Capteur de puissance (Shelly ou autres)",
           "titan_device_id": "Batterie Titan",
           "facteur_p": "Gain Proportionnel (Réactivité)",
           "facteur_i": "Gain Intégral (Correction d'erreur lente)"
