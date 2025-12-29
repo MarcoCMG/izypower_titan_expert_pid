@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration Titan Expert",
+        "description": "Paramétrez le lien entre votre Shelly et votre batterie Titan.",
+        "data": {
+          "shelly_entity": "Capteur de puissance (Shelly)",
+          "titan_device_id": "Batterie Titan",
+          "facteur_p": "Gain Proportionnel (Réactivité)",
+          "facteur_i": "Gain Intégral (Correction d'erreur lente)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "reg_switch": {
+        "name": "Pilotage Titan Auto"
+      }
+    }
+  }
+}
