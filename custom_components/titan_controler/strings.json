@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration du Régulateur Titan",
+        "data": {
+          "shelly_entity": "Capteur de puissance (Shelly)",
+          "titan_device_id": "Appareil Titan (Batterie)",
+          "facteur_p": "Facteur Proportionnel (P)",
+          "facteur_i": "Facteur Intégral (I)"
+        }
+      }
+    }
+  }
+}
