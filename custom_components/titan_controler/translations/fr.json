@@ -1,14 +1,14 @@
-pert{
+{
   "config": {
     "step": {
       "user": {
         "title": "Configuration Titan Expert",
         "description": "Paramétrez le lien entre votre Smart Meter et votre batterie Titan.",
         "data": {
-          "shelly_entity": "Capteur de puissance (Shelly ou autres)",
+          "shelly_entity": "Capteur de puissance (Smart Meter)",
           "titan_device_id": "Batterie Titan",
-          "facteur_p": "Gain Proportionnel (Réactivité)",
-          "facteur_i": "Gain Intégral (Correction d'erreur lente)"
+          "facteur_p": "Gain Proportionnel (P)",
+          "facteur_i": "Gain Intégral (I)"
         }
       }
     }
@@ -17,6 +17,14 @@ pert{
     "switch": {
       "reg_switch": {
         "name": "Pilotage Titan Auto Expert"
+      }
+    },
+    "sensor": {
+      "consigne_calculee": {
+        "name": "Consigne de puissance calculée"
+      },
+      "valeur_integrale": {
+        "name": "Valeur de l'intégrale (I)"
       }
     }
   }
