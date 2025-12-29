@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             self.enabled = True  # État piloté par le switch.py
 
     state = TitanState()
-    # On rend l'objet state accessible aux autres fichiers (comme switch.py)
+    # On rend l'objet state accessible aux autres fichiers (switch.py et sensor.py)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = state
 
     @callback
@@ -56,7 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             correction_brute = (p_factor * erreur) + (i_factor * state.integral)
             
             # 5. Bridage de la vitesse (Max Step asymétrique)
-            # 2500 si erreur < 0 (besoin de puissance), 600 si erreur > 0 (anti-injection)
             max_step = 2500 if erreur < 0 else 600
             correction_bridee = max(-max_step, min(max_step, correction_brute))
             
@@ -67,45 +66,42 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             # 7. Envoi des ordres si hors zone morte (deadband de 8W)
             if abs(puissance_filtree) > 8:
                 if nouvelle_consigne > 0:
-                    # Mode Décharge
                     await hass.services.async_call(
                         "izypower_titan_private", "discharge",
-                        {
-                            "device_id": titan_id, 
-                            "power": nouvelle_consigne, 
-                            "soc_limit": 10
-                        }
+                        {"device_id": titan_id, "power": nouvelle_consigne, "soc_limit": 10}
                     )
                 elif nouvelle_consigne < 0:
-                    # Mode Charge
                     await hass.services.async_call(
                         "izypower_titan_private", "charge",
-                        {
-                            "device_id": titan_id, 
-                            "power": abs(nouvelle_consigne), 
-                            "soc_limit": 100
-                        }
+                        {"device_id": titan_id, "power": abs(nouvelle_consigne), "soc_limit": 100}
                     )
-        
+            
+            # 8. Mise à jour forcée des entités pour l'affichage UI
+            # Cela permet aux nouveaux capteurs de réagir immédiatement
+            for entity_platform in ["sensor", "switch"]:
+                hass.async_create_task(
+                    hass.config_entries.async_forward_entry_setup(entry, entity_platform)
+                )
+
         except ValueError:
-            _LOGGER.warning(f"Valeur non numérique reçue du Shelly: {new_state.state}")
+            _LOGGER.warning(f"Valeur non numérique reçue du Smart Meter: {new_state.state}")
         except Exception as e:
             _LOGGER.error(f"Erreur critique régulation Titan: {e}")
 
-    # Enregistrement du trigger (écouteur d'état)
-    # entry.async_on_unload assure que l'écouteur s'arrête si on supprime l'intégration
+    # Enregistrement du trigger
     entry.async_on_unload(
         async_track_state_change_event(hass, shelly_entity, _async_on_power_change)
     )
 
-    # Chargement de la plateforme switch
-    await hass.config_entries.async_forward_entry_setups(entry, ["switch"])
+    # MODIFICATION ICI : On charge les deux plateformes !
+    await hass.config_entries.async_forward_entry_setups(entry, ["switch", "sensor"])
 
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry):
     """Déchargement de l'intégration."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["switch"])
+    # On décharge aussi les deux plateformes
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["switch", "sensor"])
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
