@@ -11,18 +11,17 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     
     # 1. Récupération des paramètres configurés
     shelly_entity = entry.data.get("shelly_entity")
-    # On garde titan_device_id comme "fallback" au cas où
     static_titan_id = entry.data.get("titan_device_id")
     p_factor = entry.data.get("facteur_p", 0.7)
     i_factor = entry.data.get("facteur_i", 0.2)
 
-    # 2. Stockage de l'état interne
+    # 2. Stockage de l'état interne (DÉSACTIVÉ PAR DÉFAUT)
     class TitanState:
         def __init__(self):
             self.integral = 0
             self.history = []
             self.last_consigne = 0
-            self.enabled = True 
+            self.enabled = False  # <--- Sécurité : Désactivé à l'installation
 
     state = TitanState()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = state
@@ -41,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     @callback
     async def _async_on_power_change(event):
         """Calcul et envoi des ordres à la batterie."""
+        # Si le switch est sur OFF, on ne fait strictement rien
         if not state.enabled:
             return
 
@@ -53,18 +53,16 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             
             # --- LOGIQUE DYNAMIQUE DE L'ID (Comme en YAML) ---
             ent_reg = er.async_get(hass)
-            # On cherche l'ID de l'appareil via le sensor SN
-            # Remplace si nécessaire par ton entité exacte de SN
             sn_entity_id = "sensor.izypower_titan_192_168_68_59_titan_device_sn"
             entry_sn = ent_reg.async_get(sn_entity_id)
             
             if entry_sn and entry_sn.device_id:
                 active_titan_id = entry_sn.device_id
             else:
-                active_titan_id = static_titan_id # Retour à l'ID de config si sensor introuvable
+                active_titan_id = static_titan_id
             # ------------------------------------------------
 
-            # Filtrage (Moyenne glissante 2 points)
+            # Filtrage & Calculs
             state.history.append(puissance_brute)
             if len(state.history) > 2:
                 state.history.pop(0)
@@ -77,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             max_step = 2500 if erreur < 0 else 600
             correction_bridee = max(-max_step, min(max_step, correction_brute))
             
-            # Limite à 4800 (assure-toi d'avoir débridé l'autre intégration à 4800 aussi !)
+            # Nouvelle consigne (bridage 4800W)
             nouvelle_consigne = max(-4800, min(4800, int(state.last_consigne + correction_bridee)))
             state.last_consigne = nouvelle_consigne
 
@@ -86,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
                     await hass.services.async_call(
                         "izypower_titan_private", "discharge",
                         {
-                            "device_id": active_titan_id, # Utilise l'ID dynamique
+                            "device_id": active_titan_id,
                             "power": nouvelle_consigne, 
                             "soc_limit": 10
                         }
@@ -95,23 +93,26 @@ async def async_setup_entry(hass: HomeAssistant, entry):
                     await hass.services.async_call(
                         "izypower_titan_private", "charge",
                         {
-                            "device_id": active_titan_id, # Utilise l'ID dynamique
+                            "device_id": active_titan_id,
                             "power": abs(nouvelle_consigne), 
                             "soc_limit": 100
                         }
                     )
         
         except ValueError:
-            _LOGGER.warning(f"Valeur non numérique Shelly: {new_state.state}")
+            _LOGGER.warning(f"Valeur Shelly non numérique : {new_state.state}")
         except Exception as e:
-            _LOGGER.error(f"Erreur régulation Titan (ID: {active_titan_id}): {e}")
+            _LOGGER.error(f"Erreur régulation Titan : {e}")
 
     # 5. Enregistrement du listener
     entry.async_on_unload(
         async_track_state_change_event(hass, shelly_entity, _async_on_power_change)
     )
 
+    # 6. Chargement des plateformes
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "sensor"])
+    
+    _LOGGER.info("Régulateur Titan Expert chargé (en attente d'activation manuelle).")
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry):
