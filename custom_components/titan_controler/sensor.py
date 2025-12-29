@@ -11,7 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ])
 
 class TitanConsigneSensor(SensorEntity):
-    """Affiche la dernière consigne calculée."""
+    """Affiche la dernière consigne envoyée à la batterie (W)."""
     _attr_has_entity_name = True
     _attr_translation_key = "consigne_calculee"
     _attr_native_unit_of_measurement = UnitOfPower.WATT
@@ -26,10 +26,11 @@ class TitanConsigneSensor(SensorEntity):
 
     @property
     def native_value(self):
+        """Retourne la valeur de consigne (positive = décharge, négative = charge)."""
         return self._state.last_consigne
 
 class TitanIntegralSensor(SensorEntity):
-    """Affiche la valeur de l'accumulateur intégral (I)."""
+    """Affiche la valeur de l'erreur accumulée (Composante I)."""
     _attr_has_entity_name = True
     _attr_translation_key = "valeur_integrale"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -42,4 +43,5 @@ class TitanIntegralSensor(SensorEntity):
 
     @property
     def native_value(self):
+        """Retourne l'intégrale arrondie pour plus de lisibilité."""
         return round(self._state.integral, 2)
