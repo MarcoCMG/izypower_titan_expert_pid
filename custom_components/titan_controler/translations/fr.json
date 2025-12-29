@@ -1,4 +1,4 @@
-{
+pert{
   "config": {
     "step": {
       "user": {
@@ -16,7 +16,7 @@
   "entity": {
     "switch": {
       "reg_switch": {
-        "name": "Pilotage Titan Auto"
+        "name": "Pilotage Titan Auto Expert"
       }
     }
   }
