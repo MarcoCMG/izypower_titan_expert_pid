@@ -3,17 +3,17 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
-# On importe les constantes depuis ton fichier const.py
+# Importation des constantes
 from .const import DOMAIN, MODES_LIST, PROFIL_BALANCED
 
 class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Gère le setup de l'intégration via l'interface avec Profils Expert."""
+    """Gère le setup de l'intégration."""
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(
-                title=f"Titan PID ({user_input['mode_regulation']})", 
+                title=f"Titan PID ({user_input.get('mode_regulation', 'Config')})", 
                 data=user_input
             )
 
@@ -37,27 +37,25 @@ class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        """Permet de modifier les réglages après l'installation."""
         return TitanOptionsFlow(config_entry)
 
 class TitanOptionsFlow(config_entries.OptionsFlow):
-    """Gère le menu 'Configurer' de l'intégration."""
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
-
+    """Gère la modification des réglages."""
+    
+    # On a supprimé le __init__ qui causait l'erreur AttributeError
+    
     async def async_step_init(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # On propose de changer uniquement le mode de régulation
+        # On utilise self.config_entry (fourni par la classe parente automatiquement)
+        current_mode = self.config_entry.options.get(
+            "mode_regulation", 
+            self.config_entry.data.get("mode_regulation", PROFIL_BALANCED)
+        )
+
         options_schema = vol.Schema({
-            vol.Required(
-                "mode_regulation",
-                default=self.config_entry.options.get(
-                    "mode_regulation", 
-                    self.config_entry.data.get("mode_regulation", PROFIL_BALANCED)
-                ),
-            ): selector.SelectSelector(
+            vol.Required("mode_regulation", default=current_mode): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=MODES_LIST,
                     mode=selector.SelectSelectorMode.DROPDOWN,
@@ -66,4 +64,5 @@ class TitanOptionsFlow(config_entries.OptionsFlow):
         })
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
+
 
