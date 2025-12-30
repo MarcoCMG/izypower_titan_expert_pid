@@ -23,19 +23,19 @@
   },
   "entity": {
     "switch": {
-      "reg_switch": {
-        "name": "Pilotage Titan Auto Expert"
+      "pilotage": {
+        "name": "Auto-Pilote"
       }
     },
     "sensor": {
       "consigne_calculee": {
-        "name": "Consigne de puissance"
+        "name": "Consigne"
       },
       "valeur_integrale": {
-        "name": "Correcteur Intégral (I)"
+        "name": "Correcteur (I)"
       },
       "erreur_actuelle": {
-        "name": "Erreur Réseau (P/D)"
+        "name": "Erreur (P/D)"
       }
     }
   }
