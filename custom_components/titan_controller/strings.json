@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configuration du Régulateur Titan Expert",
-        "description": "Choisissez la philosophie de régulation. Le mode Performance (Zéro Conso) privilégie l'absence de facture EDF, même si cela augmente l'injection.",
+        "title": "Titan Expert PID Configuration",
+        "description": "Choose your regulation philosophy. Performance mode (Zero Conso) prioritizes zero grid consumption, even if it increases solar export.",
         "data": {
-          "shelly_entity": "Capteur de puissance (Shelly)",
-          "titan_device_id": "Appareil Titan (Batterie)",
-          "mode_regulation": "Mode de régulation (Profil)"
+          "shelly_entity": "Power Sensor (Smart Meter)",
+          "titan_device_id": "Titan Device (Battery)",
+          "mode_regulation": "Regulation Mode (Profile)"
         }
       }
     }
@@ -15,9 +15,9 @@
   "selector": {
     "mode_regulation": {
       "options": {
-        "Eco (Anti-Injection)": "Eco (Priorité Réseau)",
-        "Équilibré": "Équilibré (Standard)",
-        "Performance (Zéro Conso)": "Performance (Zéro Conso)"
+        "Eco (Anti-Injection)": "Eco (Grid Priority)",
+        "Équilibré": "Balanced (Standard)",
+        "Performance (Zéro Conso)": "Performance (Zero Consumption)"
       }
     }
   }
