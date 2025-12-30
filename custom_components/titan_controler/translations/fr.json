@@ -2,14 +2,22 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configuration Titan Expert",
-        "description": "Paramétrez le lien entre votre Smart Meter et votre batterie Titan.",
+        "title": "Configuration Titan Expert PID",
+        "description": "Paramétrez le pilotage intelligent de votre batterie. Le mode choisi définit la réactivité et la cible de puissance réseau.",
         "data": {
           "shelly_entity": "Capteur de puissance (Smart Meter)",
           "titan_device_id": "Batterie Titan",
-          "facteur_p": "Gain Proportionnel (P)",
-          "facteur_i": "Gain Intégral (I)"
+          "mode_regulation": "Profil de régulation (Philosophie)"
         }
+      }
+    }
+  },
+  "selector": {
+    "mode_regulation": {
+      "options": {
+        "Eco (Anti-Injection)": "Eco (Priorité Anti-Injection)",
+        "Équilibré": "Équilibré (Standard)",
+        "Performance (Zéro Conso)": "Performance (Priorité Zéro Conso)"
       }
     }
   },
@@ -21,10 +29,13 @@
     },
     "sensor": {
       "consigne_calculee": {
-        "name": "Consigne de puissance calculée"
+        "name": "Consigne de puissance"
       },
       "valeur_integrale": {
-        "name": "Valeur de l'intégrale (I)"
+        "name": "Correcteur Intégral (I)"
+      },
+      "erreur_actuelle": {
+        "name": "Erreur Réseau (P/D)"
       }
     }
   }
