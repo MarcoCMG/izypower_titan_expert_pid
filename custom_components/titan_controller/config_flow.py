@@ -7,7 +7,7 @@ from homeassistant.helpers import selector
 from .const import DOMAIN, MODES_LIST, PROFIL_BALANCED
 
 class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Gère le setup de l'intégration."""
+    """Gère le setup initial."""
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
@@ -37,18 +37,17 @@ class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return TitanOptionsFlow(config_entry)
+        """Appelle la classe Options sans envoyer d'argument manuellement."""
+        return TitanOptionsFlow()
 
 class TitanOptionsFlow(config_entries.OptionsFlow):
     """Gère la modification des réglages."""
-    
-    # On a supprimé le __init__ qui causait l'erreur AttributeError
-    
+
     async def async_step_init(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # On utilise self.config_entry (fourni par la classe parente automatiquement)
+        # self.config_entry est injecté automatiquement par Home Assistant
         current_mode = self.config_entry.options.get(
             "mode_regulation", 
             self.config_entry.data.get("mode_regulation", PROFIL_BALANCED)
@@ -64,5 +63,6 @@ class TitanOptionsFlow(config_entries.OptionsFlow):
         })
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
+
 
 
