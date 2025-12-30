@@ -1,36 +1,65 @@
-# 🚀 Titan : Régulation Expert PID
+# 🚀 Titan : Régulation Expert PID (v2.0)
 
-Cette intégration transforme une automatisation complexe de pilotage de batterie en un composant natif Home Assistant. Elle implémente une **régulation PI (Proportionnelle-Intégrale)** réactive pour optimiser l'autoconsommation.
+Cette intégration remplace le pilotage automatique logiciel (soft) standard de l'Izypower Titan par un **moteur de régulation PID de précision**. Elle transforme votre batterie en un système ultra-réactif, capable de s'adapter à n'importe quel Smart Meter compatible avec Home Assistant.
 
-## ✨ Fonctionnalités
-- **Régulation PI Asynchrone** : Calcul ultra-rapide basé sur les changements d'état du Shelly.
-- **Anti-Injection Réactif** : Vitesse de descente (600W/step) et de montée (2500W/step) asymétrique pour éviter d'injecter sur le réseau.
-- **Filtrage Intelligent** : Moyenne glissante sur 2 points pour lisser les pics du Shelly.
-- **Zéro Configuration YAML** : Tout se configure via l'interface utilisateur (Config Flow).
+## 🏆 Pourquoi choisir la Régulation Expert ?
 
-## 📂 Structure des fichiers
-- `manifest.json` : Identité de l'intégration et dépendances.
-- `const.py` : Constantes partagées (DOMAIN).
-- `config_flow.py` : Interface de configuration (Choix du Shelly, du Titan et des facteurs P/I).
-- `__init__.py` : Cœur de l'algorithme et surveillance des capteurs.
-- `switch.py` : Interrupteur pour activer/désactiver le pilotage automatique.
+L'algorithme interne d'origine du Titan peut s'avérer lent ou sujet à des oscillations (pompage). Cette version "Expert" apporte des améliorations majeures :
+
+### 1. Compatibilité Universelle (Smart Meter Agnostic)
+L'intégration utilise l'abstraction de Home Assistant pour piloter la batterie à partir de **n'importe quel capteur de puissance** déclaré :
+* **Shelly** (EM, Pro 3EM, 1PM).
+* **ZLinky / TIC** (Linky Zigbee).
+* **Enphase, SolarEdge, Fronius** (Passerelles PV).
+* **ESPHome**, **RT2**, ou tout autre compteur fournissant une mesure en Watts.
+
+### 2. Précision PID + Terme Dérivé (D)
+L'ajout du terme **Dérivé** agit comme un amortisseur intelligent. Il calcule la vitesse de variation de votre consommation pour "freiner" la puissance de la batterie avant qu'elle ne dépasse sa cible, éliminant ainsi les dépassements (overshoot).
+
+
+
+### 3. Asymétrie Inversée & Priorité "Zéro Conso"
+Le moteur gère la puissance de manière asymétrique pour coller à la réalité de votre facture :
+* **Réaction Éclair (2500W/step) :** Pour compenser instantanément le démarrage d'un appareil.
+* **Retrait Doux (400W/step) :** Pour réduire la puissance lentement et rester le plus proche possible du 0W réseau.
+
+## ⚠️ Prérequis Indispensable
+
+Cette intégration est une **extension avancée** qui pilote le driver de communication.
+* **Dépendance :** Vous devez avoir installé au préalable l'intégration [izypower_titan_private](https://github.com/Charmg31/izypower_titan_private).
+* **Fonctionnement :** L'Expert PID utilise les services `charge`, `discharge` et `stop` fournis par ce driver.
 
 ## ⚙️ Installation
-1. Copiez le dossier `titan_controller` dans votre dossier `custom_components/`.
-2. Redémarrez Home Assistant.
-3. Allez dans **Paramètres** > **Appareils et Services**.
-4. Cliquez sur **Ajouter l'intégration** et recherchez "Titan : Régulation Master".
-5. Sélectionnez votre capteur de puissance Shelly et votre appareil Titan.
 
-## 🧮 Logique de Régulation
-L'algorithme vise une puissance réseau de **0W** :
-- **Erreur** = (Puissance Shelly filtrée) - 0.
-- **Intégrale** = Somme des erreurs (bornée à ±500 pour éviter l'emballement).
-- **Correction** = (P * erreur) + (I * intégrale).
-- **Consigne** = Limitée à ±4800W.
+### Option A : Via HACS (Recommandé) ⚡
+1. Ouvrez **HACS** dans Home Assistant.
+2. Cliquez sur les trois points en haut à droite et choisissez **Dépôts personnalisés**.
+3. Ajoutez l'URL de ce dépôt GitHub.
+4. Sélectionnez la catégorie **Intégration** et cliquez sur **Ajouter**.
+5. Recherchez **Titan : Régulation Expert PID** et installez-le.
 
-## 🛠 Maintenance
-Pour modifier les paramètres P ou I après l'installation, vous pouvez actuellement supprimer et réinstaller l'intégration (les paramètres sont sauvegardés dans l'UI lors de la configuration).
+### Option B : Installation Manuelle
+1. Téléchargez le dossier `titan_controller`.
+2. Copiez-le dans votre répertoire `custom_components/`.
+3. Redémarrez Home Assistant.
+
+## 🚀 Configuration finale
+1. Allez dans **Paramètres > Appareils et Services > Ajouter l'intégration**.
+2. Recherchez **"Titan : Régulation Expert PID"**.
+3. Sélectionnez votre **Smart Meter**, votre **Titan** et votre **Profil de régulation**.
+
+## 📊 Profils de Régulation
+| Profil | Cible Réseau | Philosophie |
+| :--- | :--- | :--- |
+| **Performance** | **-25W** | Priorité Facture 0€ (Légère injection pour garantir 0 conso). |
+| **Équilibré** | **0W** | Le compromis idéal pour la stabilité. |
+| **Eco** | **+15W** | Priorité Anti-Injection (Marge de sécurité réseau). |
+
+## 🛠 Diagnostics Intégrés
+L'intégration crée un appareil regroupant :
+* **Puissance Cible (Sensor) :** Puissance demandée en temps réel au Titan.
+* **Erreur Réseau (Sensor) :** Écart entre conso réelle et cible.
+* **Pilotage Auto (Switch) :** Interrupteur maître. *L'extinction envoie un ordre d'arrêt (`stop`) immédiat et réinitialise les calculs.*
 
 ---
-*Développé pour optimiser les performances des batteries Titan avec les compteurs Shelly Pro 3EM.*
+*Optimisez votre Izypower Titan avec la précision du PID (v2.0 - 30/12/2025).*
