@@ -7,7 +7,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     state = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
         TitanConsigneSensor(state, entry),
-        TitanIntegralSensor(state, entry)
+        TitanIntegralSensor(state, entry),
+        TitanErrorSensor(state, entry) # Nouveau : Pour suivre le terme D
     ])
 
 class TitanConsigneSensor(SensorEntity):
@@ -26,7 +27,6 @@ class TitanConsigneSensor(SensorEntity):
 
     @property
     def native_value(self):
-        """Retourne la valeur de consigne (positive = décharge, négative = charge)."""
         return self._state.last_consigne
 
 class TitanIntegralSensor(SensorEntity):
@@ -43,5 +43,24 @@ class TitanIntegralSensor(SensorEntity):
 
     @property
     def native_value(self):
-        """Retourne l'intégrale arrondie pour plus de lisibilité."""
         return round(self._state.integral, 2)
+
+class TitanErrorSensor(SensorEntity):
+    """Affiche l'erreur actuelle par rapport à la cible (Terme P)."""
+    _attr_has_entity_name = True
+    _attr_translation_key = "erreur_actuelle"
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:alert-circle-outline"
+
+    def __init__(self, state, entry):
+        self._state = state
+        self._attr_unique_id = f"{entry.entry_id}_erreur"
+        self._attr_device_info = {"identifiers": {(DOMAIN, entry.entry_id)}}
+
+    @property
+    def native_value(self):
+        # On affiche la dernière erreur calculée (Proportionnelle)
+        return round(self._state.last_error, 2)
+
