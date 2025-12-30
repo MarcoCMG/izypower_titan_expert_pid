@@ -11,11 +11,12 @@ class TitanControlSwitch(SwitchEntity):
     """Interrupteur pour activer/désactiver la régulation PID Expert."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "pilotage" # Correspond à la clé dans fr.json
+    _attr_translation_key = "reg_switch" # Garde ta clé actuelle du fr.json
     _attr_icon = "mdi:rocket-launch"
     
-    # FORCE L'ID TECHNIQUE PRO : switch.titan_pilotage
-    _attr_object_id = "titan_pilotage"
+    # FORCE L'ID TECHNIQUE COURT : switch.titan_auto_pilot
+    # C'est cette ligne qui évite le nom à rallonge
+    _attr_object_id = "titan_auto_pilot"
 
     def __init__(self, state, entry):
         """Initialisation de l'interrupteur."""
@@ -25,7 +26,7 @@ class TitanControlSwitch(SwitchEntity):
         
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": "Titan : Régulation Expert PID", # Nom de l'appareil
+            "name": "Titan : Régulation Expert PID",
         }
 
     @property
@@ -42,28 +43,27 @@ class TitanControlSwitch(SwitchEntity):
         """Désactive la régulation et sécurise la batterie."""
         self._state.enabled = False
         
-        # Recherche dynamique de l'ID pour le service stop
         ent_reg = er.async_get(self.hass)
         sn_entity_id = "sensor.izypower_titan_192_168_68_59_titan_device_sn"
         entry_sn = ent_reg.async_get(sn_entity_id)
         
         active_titan_id = entry_sn.device_id if entry_sn and entry_sn.device_id else self._entry.data.get("titan_device_id")
         
-        # 1. Ordre d'arrêt immédiat (Sécurité)
+        # 1. Ordre d'arrêt immédiat
         await self.hass.services.async_call(
             "izypower_titan_private", 
             "stop",
             {"device_id": active_titan_id}
         )
         
-        # 2. RÉINITIALISATION COMPLÈTE (Version 30/12)
-        # On nettoie tout pour éviter les effets de mémoire au redémarrage
+        # 2. RÉINITIALISATION COMPLÈTE
         self._state.last_consigne = 0
         self._state.integral = 0
-        self._state.last_error = 0  # Crucial pour le terme Dérivé (D)
+        self._state.last_error = 0
         self._state.history = []
         
         self.async_write_ha_state()
+
 
 
 
