@@ -1,7 +1,7 @@
 import logging
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, REGULATION_PROFILES
 
 _LOGGER = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry):
     """Configuration de l'intégration via l'UI."""
     
-    # 1. Récupération des paramètres configurés
+    # 1. Récupération des paramètres configurés (Dynamique pour chaque utilisateur)
     shelly_entity = entry.data.get("shelly_entity")
     static_titan_id = entry.data.get("titan_device_id")
     mode_regulation = entry.data.get("mode_regulation", "Équilibré")
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     class TitanState:
         def __init__(self):
             self.integral = 0
-            self.last_error = 0 # Pour le calcul du D
+            self.last_error = 0
             self.history = []
             self.last_consigne = 0
             self.enabled = False  # Sécurité : Désactivé à l'installation
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     )
 
     # 4. Boucle de régulation PID Expert
-    @callback
+    # NOTE : On retire @callback car la fonction est async (contient des await)
     async def _async_on_power_change(event):
         if not state.enabled:
             return
@@ -52,27 +52,25 @@ async def async_setup_entry(hass: HomeAssistant, entry):
         try:
             puissance_brute = float(new_state.state)
             
-            # --- LOGIQUE DYNAMIQUE DE L'ID ---
-            ent_reg = er.async_get(hass)
-            sn_entity_id = "sensor.izypower_titan_192_168_68_59_titan_device_sn"
-            entry_sn = ent_reg.async_get(sn_entity_id)
-            active_titan_id = entry_sn.device_id if entry_sn and entry_sn.device_id else static_titan_id
+            # --- LOGIQUE UNIVERSELLE ---
+            # On utilise l'ID de l'appareil sélectionné par l'utilisateur lors de la config
+            active_titan_id = static_titan_id
 
             # --- FILTRAGE & CALCULS PID ---
             state.history.append(puissance_brute)
-            if len(state.history) > 3: # Fenêtre de 3 pour plus de stabilité
+            if len(state.history) > 3:
                 state.history.pop(0)
             
             puissance_filtree = sum(state.history) / len(state.history)
             
-            # Utilisation des paramètres du profil (P, I, D et Target)
+            # Utilisation des paramètres du profil
             erreur = puissance_filtree - conf["target"]
             
             # Calcul du D (Le Frein)
             delta_erreur = erreur - state.last_error
             state.last_error = erreur
 
-            # Calcul I avec Anti-Windup (on bloque si on est au max)
+            # Calcul I avec Anti-Windup
             if not (state.last_consigne >= 4750 and erreur > 0):
                 state.integral = max(-500, min(500, state.integral + erreur))
             
@@ -83,9 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             
             correction_brute = p_term + i_term + d_term
 
-            # --- ASYMÉTRIE INVERSÉE (Priorité moins consommer) ---
-            # Si erreur > 0 (conso), on monte vite (max_up). 
-            # Si erreur < 0 (injection), on descend doucement (max_down).
+            # --- ASYMÉTRIE ---
             if correction_brute > 0:
                 correction_bridee = min(correction_brute, conf["max_up"])
             else:
@@ -95,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             nouvelle_consigne = max(-4800, min(4800, int(state.last_consigne + correction_bridee)))
             state.last_consigne = nouvelle_consigne
 
-            # Envoi des ordres (Zone morte de 10W pour stabiliser)
+            # Envoi des ordres (Zone morte de 10W)
             if abs(erreur) > 10:
                 if nouvelle_consigne > 0:
                     await hass.services.async_call(
@@ -122,8 +118,10 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry):
+    """Déchargement de l'intégration."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, ["switch", "sensor"])
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
 
