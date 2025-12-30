@@ -20,5 +20,23 @@
         "Performance (Zéro Conso)": "Performance (Zero Consumption)"
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "reg_switch": {
+        "name": "Auto-Pilot"
+      }
+    },
+    "sensor": {
+      "consigne_calculee": {
+        "name": "Power Target"
+      },
+      "valeur_integrale": {
+        "name": "Integral Corrector (I)"
+      },
+      "erreur_actuelle": {
+        "name": "Network Error (P/D)"
+      }
+    }
   }
 }
