@@ -11,8 +11,11 @@ class TitanControlSwitch(SwitchEntity):
     """Interrupteur pour activer/désactiver la régulation PID Expert."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "reg_switch" 
+    _attr_translation_key = "pilotage" # Correspond à la clé dans fr.json
     _attr_icon = "mdi:rocket-launch"
+    
+    # FORCE L'ID TECHNIQUE PRO : switch.titan_pilotage
+    _attr_object_id = "titan_pilotage"
 
     def __init__(self, state, entry):
         """Initialisation de l'interrupteur."""
@@ -22,6 +25,7 @@ class TitanControlSwitch(SwitchEntity):
         
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "Titan : Régulation Expert PID", # Nom de l'appareil
         }
 
     @property
@@ -56,9 +60,10 @@ class TitanControlSwitch(SwitchEntity):
         # On nettoie tout pour éviter les effets de mémoire au redémarrage
         self._state.last_consigne = 0
         self._state.integral = 0
-        self._state.last_error = 0  # <--- AJOUTÉ : Crucial pour le terme Dérivé (D)
+        self._state.last_error = 0  # Crucial pour le terme Dérivé (D)
         self._state.history = []
         
         self.async_write_ha_state()
+
 
 
