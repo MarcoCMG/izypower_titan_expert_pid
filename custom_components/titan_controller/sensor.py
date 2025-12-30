@@ -8,7 +8,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         TitanConsigneSensor(state, entry),
         TitanIntegralSensor(state, entry),
-        TitanErrorSensor(state, entry) # Nouveau : Pour suivre le terme D
+        TitanErrorSensor(state, entry)
     ])
 
 class TitanConsigneSensor(SensorEntity):
@@ -19,6 +19,9 @@ class TitanConsigneSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:calculator"
+    
+    # ID TECHNIQUE COURT
+    _attr_object_id = "titan_consigne"
 
     def __init__(self, state, entry):
         self._state = state
@@ -35,6 +38,9 @@ class TitanIntegralSensor(SensorEntity):
     _attr_translation_key = "valeur_integrale"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:sigma"
+    
+    # ID TECHNIQUE COURT
+    _attr_object_id = "titan_integral"
 
     def __init__(self, state, entry):
         self._state = state
@@ -53,6 +59,9 @@ class TitanErrorSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:alert-circle-outline"
+    
+    # ID TECHNIQUE COURT
+    _attr_object_id = "titan_erreur"
 
     def __init__(self, state, entry):
         self._state = state
@@ -61,6 +70,5 @@ class TitanErrorSensor(SensorEntity):
 
     @property
     def native_value(self):
-        # On affiche la dernière erreur calculée (Proportionnelle)
         return round(self._state.last_error, 2)
 
