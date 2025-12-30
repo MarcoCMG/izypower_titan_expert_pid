@@ -1,4 +1,4 @@
-# 🚀 Titan : Régulation Expert PID (v2.0)
+# 🚀 Titan : Régulation Expert PID (v1.0.1)
 
 Cette intégration remplace le pilotage automatique logiciel (soft) standard de l'Izypower Titan par un **moteur de régulation PID de précision**. Elle transforme votre batterie en un système ultra-réactif, capable de s'adapter à n'importe quel Smart Meter compatible avec Home Assistant.
 
