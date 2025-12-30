@@ -1,9 +1,10 @@
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 # On importe les constantes depuis ton fichier const.py
-from .const import DOMAIN, MODES_LIST 
+from .const import DOMAIN, MODES_LIST, PROFIL_BALANCED
 
 class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Gère le setup de l'intégration via l'interface avec Profils Expert."""
@@ -11,13 +12,11 @@ class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
-            # Le titre inclura le mode choisi pour plus de clarté
             return self.async_create_entry(
                 title=f"Titan PID ({user_input['mode_regulation']})", 
                 data=user_input
             )
 
-        # Formulaire de configuration simplifié et expert
         data_schema = vol.Schema({
             vol.Required("shelly_entity"): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="power")
@@ -25,14 +24,46 @@ class TitanConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("titan_device_id"): selector.DeviceSelector(
                 selector.DeviceSelectorConfig(integration="izypower_titan_private")
             ),
-            # Remplacement de P et I par le sélecteur de Profil (Version 30/12)
-            vol.Required("mode_regulation", default="Équilibré"): selector.SelectSelector(
+            vol.Required("mode_regulation", default=PROFIL_BALANCED): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=MODES_LIST,
                     mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="mode_regulation" # Lien avec strings.json
                 )
             ),
         })
 
         return self.async_show_form(step_id="user", data_schema=data_schema)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Permet de modifier les réglages après l'installation."""
+        return TitanOptionsFlow(config_entry)
+
+class TitanOptionsFlow(config_entries.OptionsFlow):
+    """Gère le menu 'Configurer' de l'intégration."""
+    def __init__(self, config_entry):
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # On propose de changer uniquement le mode de régulation
+        options_schema = vol.Schema({
+            vol.Required(
+                "mode_regulation",
+                default=self.config_entry.options.get(
+                    "mode_regulation", 
+                    self.config_entry.data.get("mode_regulation", PROFIL_BALANCED)
+                ),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=MODES_LIST,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        })
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
+
