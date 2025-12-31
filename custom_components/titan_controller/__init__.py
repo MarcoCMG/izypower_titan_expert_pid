@@ -12,31 +12,38 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     shelly_entity = entry.data.get("shelly_entity")
     titan_id = entry.data.get("titan_device_id")
     
-    # 2. Instanciation du Coordinateur (Le nouveau cerveau)
-    # On lui passe l'ID du Shelly pour qu'il sache quoi surveiller
+    # 2. Instanciation du Coordinateur
     coordinator = TitanPIDCoordinator(hass, entry, shelly_entity)
-    
-    # On ajoute l'ID Titan au coordinateur pour qu'il puisse envoyer les ordres
     coordinator.titan_device_id = titan_id
-    coordinator.enabled = True # Par défaut activé
+    coordinator.enabled = True 
 
-    # 3. Stockage du coordinateur pour accès par les sensors/switches
+    # 3. Stockage du coordinateur
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # 4. Premier rafraîchissement des données
+    # 4. Premier rafraîchissement
     await coordinator.async_config_entry_first_refresh()
 
-    # 5. Chargement des plateformes (sensor, switch, etc.)
+    # --- AJOUT SÉCURITÉ : ÉCOUTE DES CHANGEMENTS D'OPTIONS ---
+    # Cette ligne lie ton OptionsFlow au rechargement de l'intégration
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
+    # 5. Chargement des plateformes
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "switch"])
     
     return True
 
+async def update_listener(hass: HomeAssistant, entry):
+    """Relance l'intégration dès qu'on change un mode dans les options."""
+    _LOGGER.info("Profil de régulation Titan modifié, rechargement...")
+    await hass.config_entries.async_reload(entry.entry_id)
+
 async def async_unload_entry(hass: HomeAssistant, entry):
-    """Déchargement propre de l'intégration."""
+    """Déchargement propre."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "switch"])
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
 
 
 
