@@ -1,5 +1,11 @@
 # 🚀 Titan : Régulation Expert PID (v1.0.1) Version Béta. 
 
+Note sur le pilotage PID : Le paramétrage du moteur PID ainsi que les variables de contrôle sont actuellement en cours d'optimisation. Toute contribution ou retour d'expérience est le bienvenu. 
+Pour affiner les réglages adaptés à votre propre installation, il est recommandé d'analyser l'historique croisé de votre capteur de consommation et de la valeur de consigne générée par l'automatisation.
+
+
+
+
 Cette intégration remplace le pilotage automatique logiciel (soft) standard de l'Izypower Titan par un **moteur de régulation PID de précision**. Elle transforme votre batterie en un système ultra-réactif, capable de s'adapter à n'importe quel Smart Meter compatible avec Home Assistant.
 
 ## 🏆 Pourquoi choisir la Régulation Expert ?
