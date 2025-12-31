@@ -8,7 +8,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry):
     """Configuration de l'intégration via l'UI."""
     
-    # 1. Récupération des IDs configurés
+    # 1. Récupération des IDs
     shelly_entity = entry.data.get("shelly_entity")
     titan_id = entry.data.get("titan_device_id")
     
@@ -17,14 +17,14 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     coordinator.titan_device_id = titan_id
     coordinator.enabled = True 
 
-    # 3. Stockage du coordinateur
+    # 3. Stockage pour accès par les sensors/switches
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # 4. Premier rafraîchissement
+    # 4. Premier rafraîchissement des données
     await coordinator.async_config_entry_first_refresh()
 
-    # --- AJOUT SÉCURITÉ : ÉCOUTE DES CHANGEMENTS D'OPTIONS ---
-    # Cette ligne lie ton OptionsFlow au rechargement de l'intégration
+    # --- ÉLÉMENT CRUCIAL : ÉCOUTEUR DE MISE À JOUR ---
+    # Sans cette ligne, changer de profil dans les options cause des erreurs
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # 5. Chargement des plateformes
@@ -33,16 +33,17 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     return True
 
 async def update_listener(hass: HomeAssistant, entry):
-    """Relance l'intégration dès qu'on change un mode dans les options."""
-    _LOGGER.info("Profil de régulation Titan modifié, rechargement...")
+    """Force le rechargement de l'intégration quand tu modifies les options."""
+    _LOGGER.info("Profil Titan modifié. Rechargement de l'intégration pour appliquer les nouveaux paramètres.")
     await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_unload_entry(hass: HomeAssistant, entry):
-    """Déchargement propre."""
+    """Déchargement propre de l'intégration."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "switch"])
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
 
 
 
