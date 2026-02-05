@@ -1,0 +1,49 @@
+# Services publics (existants)
+discharge:
+  description: Décharge Titan public
+  fields:
+    device_id: {example: "6cd3be8315ef44c5cdfaa6d64cc23394"}
+    power: {example: 1000}
+    soc_limit: {example: 10}
+  target: {entity: {domain: izypower_titan}}
+
+charge:
+  description: Charge Titan public  
+  fields:
+    device_id: {example: "6cd3be8315ef44c5cdfaa6d64cc23394"}
+    power: {example: 1000}
+    soc_limit: {example: 90}
+  target: {entity: {domain: izypower_titan}}
+
+stop:
+  description: Stop Titan public
+  fields:
+    device_id: {example: "6cd3be8315ef44c5cdfaa6d64cc23394"}
+  target: {entity: {domain: izypower_titan}}
+
+# ✅ NOUVEAUX SERVICES PRIVATE (pour ton PID)
+discharge_private:
+  description: Décharge Titan (PID expert)
+  fields:
+    device_id:
+      description: ID Titan
+      example: "6cd3be8315ef44c5cdfaa6d64cc23394"
+    power:
+      description: Puissance W
+      example: 1500
+    soc_limit:
+      description: SOC limite %
+      example: 10
+  target: {entity: {domain: izypower_titan}}
+
+charge_private:
+  description: Charge Titan (PID expert)
+  fields:
+    device_id: {example: "6cd3be8315ef44c5cdfaa6d64cc23394"}
+    power: {example: 800}
+    soc_limit: {example: 95}
+
+stop_private:
+  description: Stop immédiat Titan (PID)
+  fields:
+    device_id: {example: "6cd3be8315ef44c5cdfaa6d64cc23394"}

@@ -55,6 +55,12 @@ async def async_unload_entry(hass: HomeAssistant, entry):
     return unload_ok
 
 
+# ✅ AJOUT : Services privés PID
+from .services import async_setup_services
+await async_setup_services(hass)
+
+return True
+
 
 
 
