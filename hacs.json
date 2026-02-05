@@ -1,5 +1,5 @@
 {
-  "name": "Titan Regulation Expert PID",
+  "name": "Titan : Régulation Expert PID",
   "render_readme": true,
   "category": "integration",
   "homeassistant": "2025.1.0"
