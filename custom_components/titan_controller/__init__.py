@@ -1,68 +1,70 @@
+"""IzyPower Titan Expert PID."""
+
 import logging
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from .const import DOMAIN
-from .coordinator import TitanPIDCoordinator
+import asyncio
+import voluptuous as vol
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er
+from .const import (
+    DOMAIN, MODES_LIST, REGULATION_PROFILES,
+    SENSOR_TITAN_COUNT, SENSOR_TITAN_IDS, SENSOR_TITAN_RATIO,
+    SENSOR_TITAN_STATUS, SENSOR_TITAN_TOTAL_CAP, SWITCH_PID_MASTER,
+    ICON_TITAN_COUNT, ICON_TITAN_IDS, ICON_TITAN_RATIO,
+    ICON_TITAN_STATUS, ICON_TITAN_CAP
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry):
-    """Configuration de l'intégration via l'UI."""
+PLATFORMS = ["sensor", "switch"]
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Setup intégration."""
+    hass.data.setdefault(DOMAIN, {})
     
-    # 1. Récupération des IDs
-    shelly_entity = entry.data.get("shelly_entity")
-    titan_id = entry.data.get("titan_device_id")
+    # AUTO-DÉTECTION Titans + Config Flow data
+    titan_config = await autodetect_titans(hass, entry.data)
+    hass.data[DOMAIN]["titan_config"] = titan_config
+    hass.data[DOMAIN]["profiles"] = REGULATION_PROFILES
     
-    # 2. Instanciation du Coordinateur
-    coordinator = TitanPIDCoordinator(hass, entry, shelly_entity)
-    coordinator.titan_device_id = titan_id
-    coordinator.enabled = True 
-
-    # --- AJOUT : IDENTIFICATION DE L'APPAREIL (Évite le "undefined") ---
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name="Titan : Régulation Expert PID",
-        manufacturer="IzyPower",
-        model="Expert PID Controller",
-    )
-
-    # 3. Stockage pour accès par les sensors/switches
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    # 4. Premier rafraîchissement des données
-    await coordinator.async_config_entry_first_refresh()
-
-    # --- ÉLÉMENT CRUCIAL : ÉCOUTEUR DE MISE À JOUR ---
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
-    # 5. Chargement des plateformes
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "switch"])
+    # Services proxy khirale
+    await async_setup_services(hass)
+    
+    # Plateformes
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
     return True
 
-async def update_listener(hass: HomeAssistant, entry):
-    """Force le rechargement de l'intégration quand tu modifies les options."""
-    _LOGGER.info("Profil Titan modifié. Rechargement de l'intégration.")
-    await hass.config_entries.async_reload(entry.entry_id)
+async def autodetect_titans(hass, entry_data):
+    """Scan khirale entities → Fusion config flow + auto."""
+    titans = {}
+    
+    # 1. Scan khirale sensors.titan_*
+    for state in hass.states.async_all():
+        if "_capacity" in state.entity_id and "titan_" in state.entity_id:
+           ## ❌ **__init__.py INCOMPLET** → **VERSION COMPLÈTE**
 
-async def async_unload_entry(hass: HomeAssistant, entry):
-    """Déchargement propre de l'intégration."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "switch"])
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+**Problèmes détectés** :
+- `autodetect_titans`, `create_status_sensors` → définies mais **pas appelées**
+- Classes `TitanPidSwitch`, `PidSensor` → **vides**
+- Pas de `async_unload_entry`
+- Manque intégration `config_flow`
 
+## ✅ **`__init__.py` FINAL COMPLÈT**
+```python
+"""IzyPower Titan Expert PID."""
 
-# ✅ AJOUT : Services privés PID
-from .services import async_setup_services
-await async_setup_services(hass)
-
-return True
-
-
-
-
-
-
+import logging
+import asyncio
+import voluptuous as vol
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er
+from .const import (
+    DOMAIN, ENTITY_SWITCH_PID, SENSOR_TITAN_COUNT, SENSOR_TITAN_IDS,
+    SENSOR_TITAN_RATIO, SENSOR_TITAN_STATUS, SENSOR_TITAN_TOTAL_CAP
+)
+from .services

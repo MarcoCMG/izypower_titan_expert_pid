@@ -1,43 +1,51 @@
-"""Services privés IzyPower Titan pour PID."""
+"""Proxy services vers khirale/izypower_titan."""
 
 import logging
+import asyncio
 from homeassistant.core import HomeAssistant, ServiceCall
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_services(hass: HomeAssistant) -> None:
-    """Setup private services."""
+    """Setup proxy services."""
     
-    async def titan_discharge_private(service: ServiceCall) -> None:
-        device_id = service.data["device_id"]
-        power = int(service.data["power"])
-        soc_limit = int(service.data["soc_limit"])
+    config = hass.data[DOMAIN]
+    
+    async def proxy_forward(service_name: str):
+        async def handler(call: ServiceCall) -> None:
+            # Forward vers khirale
+            titan_config = config["titan_config"]
+            
+            if titan_config["mode"] == "single":
+                await hass.services.async_call(
+                    "izypower_titan", service_name, call.data)
+            else:  # dual
+                ratios = titan_config["ratios"]
+                p1 = call.data["power"] * (ratios["ratio_6k"] / 100)
+                p2 = call.data["power"] * (ratios["ratio_4k"] / 100)
+                
+                tasks = [
+                    hass.services.async_call("izypower_titan", service_name, {
+                        "device_id": titan_config["titan_6k_id"],
+                        "power": int(p1), "soc_limit": call.data["soc_limit"]
+                    }),
+                    hass.services.async_call("izypower_titan", service_name, {
+                        "device_id": titan_config["titan_4k_id"], 
+                        "power": int(p2), "soc_limit": call.data["soc_limit"]
+                    })
+                ]
+                await asyncio.gather(*tasks)
+            
+            _LOGGER.debug(f"{service_name}_private → {call.data}")
         
-        # Appelle ta logique RPC existante
-        await hass.services.async_call(
-            DOMAIN, "discharge",
-            {"device_id": device_id, "power": power, "soc_limit": soc_limit}
-        )
-        _LOGGER.debug(f"Titan {device_id} discharge_private: {power}W, SOC:{soc_limit}%")
+        return handler
     
-    async def titan_charge_private(service: ServiceCall) -> None:
-        device_id = service.data["device_id"]
-        power = int(service.data["power"])
-        soc_limit = int(service.data["soc_limit"])
-        
-        await hass.services.async_call(
-            DOMAIN, "charge",
-            {"device_id": device_id, "power": power, "soc_limit": soc_limit}
-        )
-    
-    async def titan_stop_private(service: ServiceCall) -> None:
-        device_id = service.data["device_id"]
-        await hass.services.async_call(
-            DOMAIN, "stop", {"device_id": device_id}
-        )
-    
-    # Enregistre les services
-    hass.services.async_register(DOMAIN, "discharge_private", titan_discharge_private)
-    hass.services.async_register(DOMAIN, "charge_private", titan_charge_private)
-    hass.services.async_register(DOMAIN, "stop_private", titan_stop_private)
+    # 3 proxies
+    hass.services.async_register(DOMAIN, "discharge_private", 
+                                proxy_forward("discharge"))
+    hass.services.async_register(DOMAIN, "charge_private", 
+                                proxy_forward("charge"))
+    hass.services.async_register(DOMAIN, "stop_private", 
+                                proxy_forward("stop"))
+

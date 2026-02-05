@@ -4,7 +4,7 @@ DOMAIN = "titan_controller"
 
 # Noms des profils affichés dans l'interface
 PROFIL_ECO = "Eco (Anti-Injection)"
-PROFIL_BALANCED = "Équilibré"
+PROFIL_BALANCED = "Équilibré" 
 PROFIL_PERF = "Performance (Zéro Conso)"
 
 # Configuration technique des profils (Version optimisée 31/12)
@@ -56,3 +56,36 @@ REGULATION_PROFILES = {
 # Liste pour le menu déroulant du config_flow
 CONF_MODE_REGULATION = "mode_regulation"
 MODES_LIST = [PROFIL_ECO, PROFIL_BALANCED, PROFIL_PERF]
+
+# ============================== NOUVEAU : Multi-Titan ==============================
+CONF_TITAN_MODE = "titan_mode"
+CONF_TITAN_6K_ID = "titan_6k_id"
+CONF_TITAN_4K_ID = "titan_4k_id"
+CONF_CAP_6K = "cap_6k"
+CONF_CAP_4K = "cap_4k"
+
+MODE_SINGLE = "single"
+MODE_DUAL_AUTO = "dual_auto"
+MODE_DUAL_MANUAL = "dual_manual"
+
+# Sensors Multi-Titan
+SENSOR_TITAN_COUNT = "sensor.titan_pid_count"
+SENSOR_TITAN_IDS = "sensor.titan_pid_ids"
+SENSOR_TITAN_RATIO = "sensor.titan_pid_ratio"
+SENSOR_TITAN_STATUS = "sensor.titan_pid_status"
+SENSOR_TITAN_TOTAL_CAP = "sensor.titan_pid_total_cap"
+
+# Switch PID
+SWITCH_PID_MASTER = "switch.titan_regulation_expert_pid_none"
+
+# Services proxy khirale
+SERVICE_DISCHARGE_PRIVATE = "discharge_private"
+SERVICE_CHARGE_PRIVATE = "charge_private"
+SERVICE_STOP_PRIVATE = "stop_private"
+
+# Icons
+ICON_TITAN_COUNT = "mdi:battery-group"
+ICON_TITAN_IDS = "mdi:identifier"
+ICON_TITAN_RATIO = "mdi:scale-balance"
+ICON_TITAN_STATUS = "mdi:robot-industrial"
+ICON_TITAN_CAP = "mdi:battery-high"
