@@ -15,7 +15,7 @@ from .const import (
     ICON_TITAN_STATUS, ICON_TITAN_CAP
 )
 from .services import async_setup_services
-
+from .config_flow import TitanControllerConfigFlow
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "switch"]
@@ -68,4 +68,5 @@ from .const import (
     SENSOR_TITAN_RATIO, SENSOR_TITAN_STATUS, SENSOR_TITAN_TOTAL_CAP
 )
 from .services
+
 
