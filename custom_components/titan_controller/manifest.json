@@ -1,7 +1,7 @@
 {
   "domain": "izypower_titan_expert_pid",
   "name": "IzyPower Titan Expert pid",
-  "version": "1.3.0",  # ← INCRÉMENTÉ
+  "version": "2.0.0",  # ← INCRÉMENTÉ
   "documentation": "https://github.com/MarcoCMG/izypower_titan_expert_pid",
   "requirements": ["aiohttp>=3.8.0"],
   "codeowners": ["@MarcoCMG"],
@@ -9,6 +9,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling"
 }
+
 
 
 
