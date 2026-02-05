@@ -1,6 +1,7 @@
 {
   "name": "Titan : Régulation Expert PID",
-  "render_readme": true,
-  "category": "integration",
-  "homeassistant": "2026.1.0
+  "content_in_root": false,
+  "domains": ["integration"],
+  "filename": "custom_components/titan_controller/manifest.json"
 }
+
