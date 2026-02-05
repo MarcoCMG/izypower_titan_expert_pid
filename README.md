@@ -1,4 +1,4 @@
-# 🚀 Titan : Régulation Expert PID (v1.0.1) Version Béta. 
+# 🚀 Titan : Régulation Expert PID (v2.0.0) Version Béta. 
 
 Note sur le pilotage PID : Le paramétrage du moteur PID ainsi que les variables de contrôle sont actuellement en cours d'optimisation. Toute contribution ou retour d'expérience est le bienvenu. 
 Pour affiner les réglages adaptés à votre propre installation, il est recommandé d'analyser l'historique croisé de votre capteur de consommation et de la valeur de consigne générée par l'automatisation.
@@ -68,4 +68,4 @@ L'intégration crée un appareil regroupant :
 * **Pilotage Auto (Switch) :** Interrupteur maître. *L'extinction envoie un ordre d'arrêt (`stop`) immédiat et réinitialise les calculs.*
 
 ---
-*Optimisez votre Izypower Titan avec la précision du PID (v2.0 - 30/12/2025).*
+*Optimisez votre Izypower Titan avec la précision du PID (v2.0 - 05/02/2025).*
